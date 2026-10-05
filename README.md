@@ -1,1 +1,0 @@
-# cropradar-data-guide

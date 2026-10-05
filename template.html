@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CropRadar — Public data sources for wheat &amp; barley</title>
+<meta name="description" content="Every public dataset found for CropRadar wheat & barley work: what it is, which crops it covers, how to get it.">
+<style>
+:root{
+  --green:#1d5c34; --green-dark:#143f24; --ink:#1f2937; --muted:#6b7280;
+  --bg:#f7f8f5; --card:#ffffff; --line:#e5e7eb;
+  --open:#15803d; --login:#1d4ed8; --verify:#b45309; --closed:#6b7280;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.55}
+.hero{background:linear-gradient(135deg,var(--green-dark),var(--green));color:#fff;padding:44px 20px}
+.hero-inner{max-width:1080px;margin:0 auto}
+.hero h1{margin:0 0 8px;font-size:clamp(26px,4vw,38px);letter-spacing:-.5px}
+.hero p{margin:6px 0;opacity:.92;max-width:720px}
+.hero .scope{display:inline-block;margin-top:12px;background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px;font-size:13px}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
+.searchbar{position:sticky;top:0;z-index:50;background:var(--bg);padding:14px 0;border-bottom:1px solid var(--line)}
+.searchbar input{width:100%;font-size:16px;padding:12px 16px;border:1px solid var(--line);
+  border-radius:10px;background:#fff}
+nav.cats{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
+nav.cats a{font-size:13px;text-decoration:none;color:var(--green);background:#fff;
+  border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+nav.cats a:hover{border-color:var(--green)}
+h2.sec{margin:38px 0 4px;font-size:22px;letter-spacing:-.3px}
+.sec-sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;
+  display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:16.5px}
+.card p{margin:0;font-size:14px;color:#374151}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;background:#eef4ee;color:var(--green-dark);border-radius:999px;padding:3px 10px;font-weight:600}
+.badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px;color:#fff}
+.b-open{background:var(--open)} .b-login{background:var(--login)}
+.b-verify{background:var(--verify)} .b-closed{background:var(--closed)}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.parked{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:16px 18px;margin:16px 0}
+.parked b{color:#92400e}
+footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid var(--line);padding-top:18px}
+.src-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.src{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.src b{font-size:14.5px}
+.src p{margin:6px 0 0;font-size:13.5px;color:#374151}
+.empty-note{display:none;color:var(--muted);font-style:italic;margin:20px 0}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <h1>CropRadar — Public data sources</h1>
+    <p>Wheat &amp; barley datasets found for the CropRadar project (UM6P / OCP): what each one is, which crops it covers, how to get it, and what it's for. License flags marked ⚠️ need verification before production use.</p>
+    <p style="font-size:13px;opacity:.8">Guide written Oct 2026 · 37 datasets · Morocco-first</p>
+    <span class="scope">Current scope: no satellite crop-mapping for now — ground truth, tables, weather, soil &amp; field photos</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="searchbar">
+    <input id="q" type="search" placeholder="Search datasets — try &quot;rust&quot;, &quot;barley&quot;, &quot;yield&quot;, &quot;kaggle&quot;…" autocomplete="off">
+  </div>
+
+  <nav class="cats" id="nav"></nav>
+
+  <h2 class="sec" id="sources">Sources by data type</h2>
+  <p class="sec-sub">Where the data lives, grouped by what kind of data each source hosts.</p>
+  <div class="src-grid">
+    <div class="src"><b>Field / plant photos</b><p>Figshare (Moroccan parcel photos) · Kaggle (wheat disease + weed sets, login) · Mendeley Data (wheat leaf disease) · Zenodo (wheat-head counting) · Weed-AI (weed boxes) · IEEE DataPort (barley UAV, login)</p></div>
+    <div class="src"><b>Soil</b><p>SoilGrids (ISRIC) — global rasters + point API</p></div>
+    <div class="src"><b>Yield tables</b><p>FAOSTAT — Morocco wheat + barley CSVs, 1961–2024</p></div>
+    <div class="src"><b>Weather &amp; climate</b><p>NASA POWER (free API) · Open-Meteo (free API) · CHIRPS (rainfall rasters)</p></div>
+    <div class="src"><b>Trial data (CSV / XLSX)</b><p>Dryad (aphid loads) · MELDATA / ICARDA (aphid trials) · PLOS ONE (irrigation trial files)</p></div>
+    <div class="src"><b>Mixed (code + data repos)</b><p>GitHub · Kaggle · Zenodo</p></div>
+    <div class="src"><b>Paper-only, no data</b><p>Springer barley hyperspectral (request-only) · Ethiopian barley study · Saïs tillage trial · Helsinki weed UAV</p></div>
+    <div class="src"><b>Parked for now</b><p>WorldCereal · BreizhCrops · Kazakhstan UAV · CropHarvest</p></div>
+  </div>
+
+  <h2 class="sec" id="guide">Dataset guide — one paragraph each</h2>
+  <p class="sec-sub">Every dataset, in plain words. Crop chips show what each one covers.</p>
+
+  <!--SECTIONS-->
+
+  <p class="empty-note" id="empty">No datasets match your search.</p>
+
+  <footer>
+    Built for the CropRadar project · Sources verified Sep–Oct 2026 · Licenses marked ⚠️ must be confirmed on the source page before production use.
+  </footer>
+</div>
+
+<script>
+const q=document.getElementById('q'), empty=document.getElementById('empty');
+const cards=[...document.querySelectorAll('.card')];
+const sections=[...document.querySelectorAll('section.cat')];
+q.addEventListener('input',()=>{
+  const s=q.value.trim().toLowerCase(); let shown=0;
+  cards.forEach(c=>{
+    const hit=!s||c.dataset.search.includes(s);
+    c.style.display=hit?'':'none'; if(hit)shown++;
+  });
+  sections.forEach(sec=>{
+    const any=[...sec.querySelectorAll('.card')].some(c=>c.style.display!=='none');
+    sec.style.display=any?'':'none';
+  });
+  empty.style.display=shown?'none':'block';
+});
+// build nav
+const nav=document.getElementById('nav');
+sections.forEach(sec=>{
+  const a=document.createElement('a'); a.href='#'+sec.id; a.textContent=sec.dataset.nav;
+  nav.appendChild(a);
+});
+</script>
+</body>
+</html>
