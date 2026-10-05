@@ -79,7 +79,16 @@ footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid va
   .grid{grid-template-columns:1fr}
   .toolbar{flex-wrap:nowrap}
   #deck .card{flex-basis:88vw}
+  .fchip{min-height:44px;display:inline-flex;align-items:center}
+  .viewtoggle button{min-height:44px}
+  .searchbar input{min-height:48px}
+  .deckbar .navbtn{width:48px;height:48px}
 }
+.statusrow{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:13px;color:var(--muted);min-height:24px;flex-wrap:wrap}
+#resultCount{font-weight:600;color:var(--ink)}
+#clearBtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:12.5px;cursor:pointer;color:var(--ink)}
+#hint{display:inline-flex;align-items:center;gap:4px}
+#hintX{border:0;background:none;font-size:17px;cursor:pointer;color:var(--muted);padding:4px 8px;line-height:1}
 </style>
 </head>
 <body>
@@ -100,6 +109,11 @@ footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid va
       <div class="viewtoggle" role="group" aria-label="View">
         <button id="vGrid" class="on" type="button">▦ Grid</button><button id="vSwipe" type="button">⇄ Swipe</button>
       </div>
+    </div>
+    <div class="statusrow">
+      <span id="resultCount"></span>
+      <button id="clearBtn" type="button" hidden>✕ Clear</button>
+      <span id="hint">💡 <span>Tap the blue chips to filter by what a dataset is for</span> <button id="hintX" type="button" aria-label="Dismiss">×</button></span>
     </div>
   </div>
 
@@ -176,6 +190,8 @@ function applyFilters(){
     buildDeck();
   }
   empty.style.display=shown?'none':'block';
+  document.getElementById('resultCount').textContent='Showing '+shown+' of '+cards.length+' datasets';
+  document.getElementById('clearBtn').hidden=!(selected.size>0||q.value.trim());
 }
 function buildDeck(){
   deck.innerHTML='';
@@ -193,9 +209,18 @@ function setView(v){
   document.getElementById('vSwipe').classList.toggle('on',v==='swipe');
   document.body.classList.toggle('swipe',v==='swipe');
   deckWrap.hidden=v!=='swipe';
-  if(v==='swipe'){buildDeck();}
+  if(v==='swipe'){buildDeck();nudgeDeck();}
   else{restoreGrid();}
   applyFilters();
+}
+function nudgeDeck(){
+  try{
+    if(localStorage.getItem('dg-swipe-nudged'))return;
+    localStorage.setItem('dg-swipe-nudged','1');
+  }catch(e){return;}
+  setTimeout(()=>{deck.scrollBy({left:90,behavior:'smooth'});
+    setTimeout(()=>{deck.scrollBy({left:-90,behavior:'smooth'});},500);
+  },400);
 }
 function updateCount(){
   const vis=visibleCards(), n=vis.length;
@@ -210,6 +235,19 @@ document.getElementById('nextBtn').onclick=()=>deck.scrollBy({left:deck.clientWi
 document.getElementById('vGrid').onclick=()=>setView('grid');
 document.getElementById('vSwipe').onclick=()=>setView('swipe');
 q.addEventListener('input',applyFilters);
+document.getElementById('clearBtn').onclick=()=>{
+  q.value=''; selected.clear();
+  [...chipBox.children].forEach(b=>b.classList.remove('on'));
+  applyFilters(); q.focus();
+};
+(function(){
+  const hint=document.getElementById('hint');
+  try{if(localStorage.getItem('dg-hint-off'))hint.style.display='none';}catch(e){}
+  document.getElementById('hintX').onclick=()=>{
+    hint.style.display='none';
+    try{localStorage.setItem('dg-hint-off','1');}catch(e){}
+  };
+})();
 // functionality chips
 const chipBox=document.getElementById('funcChips');
 (FUNCS||[]).forEach(f=>{
