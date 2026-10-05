@@ -22,22 +22,34 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .hero .scope{display:inline-block;margin-top:12px;background:rgba(255,255,255,.14);
   border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px;font-size:13px}
 .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 80px}
-.searchbar{position:sticky;top:0;z-index:50;background:var(--bg);padding:14px 0;border-bottom:1px solid var(--line)}
+.searchbar{position:sticky;top:0;z-index:50;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
 .searchbar input{width:100%;font-size:16px;padding:12px 16px;border:1px solid var(--line);
   border-radius:10px;background:#fff}
+.toolbar{display:flex;gap:10px;align-items:center;margin-top:10px}
+.fchips{display:flex;gap:8px;overflow-x:auto;padding:2px;flex:1;min-width:0;scrollbar-width:thin}
+.fchip{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);background:#fff;
+  border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;color:var(--ink)}
+.fchip.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.viewtoggle{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex:0 0 auto;background:#fff}
+.viewtoggle button{border:0;background:#fff;padding:8px 14px;font-size:13px;cursor:pointer;color:var(--ink)}
+.viewtoggle button.on{background:var(--green);color:#fff;font-weight:600}
 nav.cats{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
 nav.cats a{font-size:13px;text-decoration:none;color:var(--green);background:#fff;
   border:1px solid var(--line);border-radius:999px;padding:6px 12px}
 nav.cats a:hover{border-color:var(--green)}
+body.swipe nav.cats{display:none}
 h2.sec{margin:38px 0 4px;font-size:22px;letter-spacing:-.3px}
 .sec-sub{color:var(--muted);font-size:14px;margin:0 0 16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+body.swipe section.cat{display:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;
   display:flex;flex-direction:column;gap:10px}
 .card h3{margin:0;font-size:16.5px}
 .card p{margin:0;font-size:14px;color:#374151}
+.catlabel{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:700}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:12px;background:#eef4ee;color:var(--green-dark);border-radius:999px;padding:3px 10px;font-weight:600}
+.funchip{font-size:12px;background:#e8eefc;color:#1e3a8a;border-radius:999px;padding:3px 10px;font-weight:600}
 .badge{font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 10px;color:#fff}
 .b-open{background:var(--open)} .b-login{background:var(--login)}
 .b-verify{background:var(--verify)} .b-closed{background:var(--closed)}
@@ -50,6 +62,24 @@ footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid va
 .src b{font-size:14.5px}
 .src p{margin:6px 0 0;font-size:13.5px;color:#374151}
 .empty-note{display:none;color:var(--muted);font-style:italic;margin:20px 0}
+/* swipe deck */
+#deckWrap{margin-top:6px}
+.deckbar{display:flex;align-items:center;gap:12px;margin:8px 0 4px}
+.deckbar .navbtn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
+  background:#fff;font-size:20px;cursor:pointer;color:var(--green);flex:0 0 auto}
+.deckbar .navbtn:active{background:#eef4ee}
+#deckCount{font-size:14px;color:var(--muted);font-weight:600;min-width:64px;text-align:center}
+#deck{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:10px 4px 22px;-webkit-overflow-scrolling:touch}
+#deck .card{flex:0 0 min(86vw,430px);scroll-snap-align:center;max-height:68vh;overflow-y:auto}
+.deckhint{font-size:12.5px;color:var(--muted);margin:0 0 2px}
+@media (max-width:640px){
+  .hero{padding:32px 16px}
+  .wrap{padding:16px 14px 70px}
+  .grid{grid-template-columns:1fr}
+  .toolbar{flex-wrap:nowrap}
+  #deck .card{flex-basis:88vw}
+}
 </style>
 </head>
 <body>
@@ -65,6 +95,12 @@ footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid va
 <div class="wrap">
   <div class="searchbar">
     <input id="q" type="search" placeholder="Search datasets — try &quot;rust&quot;, &quot;barley&quot;, &quot;yield&quot;, &quot;kaggle&quot;…" autocomplete="off">
+    <div class="toolbar">
+      <div class="fchips" id="funcChips" aria-label="Filter by use"></div>
+      <div class="viewtoggle" role="group" aria-label="View">
+        <button id="vGrid" class="on" type="button">▦ Grid</button><button id="vSwipe" type="button">⇄ Swipe</button>
+      </div>
+    </div>
   </div>
 
   <nav class="cats" id="nav"></nav>
@@ -83,7 +119,16 @@ footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid va
   </div>
 
   <h2 class="sec" id="guide">Dataset guide — one paragraph each</h2>
-  <p class="sec-sub">Every dataset, in plain words. Crop chips show what each one covers.</p>
+  <p class="sec-sub">Every dataset, in plain words. Crop chips show coverage; blue chips show what each one is for.</p>
+  <div id="deckWrap" hidden>
+    <p class="deckhint">Swipe through the datasets — tap a blue chip above to filter by use first.</p>
+    <div class="deckbar">
+      <button class="navbtn" id="prevBtn" type="button" aria-label="Previous">‹</button>
+      <span id="deckCount">0 / 0</span>
+      <button class="navbtn" id="nextBtn" type="button" aria-label="Next">›</button>
+    </div>
+    <div id="deck"></div>
+  </div>
 
   <!--SECTIONS-->
 
@@ -94,28 +139,101 @@ footer{color:var(--muted);font-size:13px;margin-top:60px;border-top:1px solid va
   </footer>
 </div>
 
+<!--FUNCS-->
 <script>
 const q=document.getElementById('q'), empty=document.getElementById('empty');
 const cards=[...document.querySelectorAll('.card')];
 const sections=[...document.querySelectorAll('section.cat')];
-q.addEventListener('input',()=>{
-  const s=q.value.trim().toLowerCase(); let shown=0;
+const deck=document.getElementById('deck'), deckWrap=document.getElementById('deckWrap');
+const deckCount=document.getElementById('deckCount');
+cards.forEach(c=>{c._home=c.parentElement; c._next=c.nextElementSibling; c.dataset.visible='1';});
+const selected=new Set();
+let view='grid';
+try{view=localStorage.getItem('dg-view')||'grid';}catch(e){}
+
+function cardMatches(c){
+  const s=q.value.trim().toLowerCase();
+  const okSearch=!s||c.dataset.search.includes(s);
+  const funcs=(c.dataset.func||'').split('|').filter(Boolean);
+  const okFunc=selected.size===0||funcs.some(f=>selected.has(f));
+  return okSearch&&okFunc;
+}
+function visibleCards(){return cards.filter(c=>c.dataset.visible==='1');}
+function applyFilters(){
+  let shown=0;
   cards.forEach(c=>{
-    const hit=!s||c.dataset.search.includes(s);
-    c.style.display=hit?'':'none'; if(hit)shown++;
+    const hit=cardMatches(c);
+    c.dataset.visible=hit?'1':'0';
+    if(hit)shown++;
   });
-  sections.forEach(sec=>{
-    const any=[...sec.querySelectorAll('.card')].some(c=>c.style.display!=='none');
-    sec.style.display=any?'':'none';
-  });
+  if(view==='grid'){
+    cards.forEach(c=>{c.style.display=c.dataset.visible==='1'?'':'none';});
+    sections.forEach(sec=>{
+      const any=[...sec.querySelectorAll('.card')].some(x=>x.dataset.visible==='1');
+      sec.style.display=any?'':'none';
+    });
+  }else{
+    buildDeck();
+  }
   empty.style.display=shown?'none':'block';
+}
+function buildDeck(){
+  deck.innerHTML='';
+  visibleCards().forEach(c=>{c.style.display='';deck.appendChild(c);});
+  deck.scrollLeft=0; updateCount();
+}
+function restoreGrid(){
+  cards.forEach(c=>{c._home.insertBefore(c,c._next);});
+}
+function setView(v){
+  if(v===view)return;
+  view=v;
+  try{localStorage.setItem('dg-view',v);}catch(e){}
+  document.getElementById('vGrid').classList.toggle('on',v==='grid');
+  document.getElementById('vSwipe').classList.toggle('on',v==='swipe');
+  document.body.classList.toggle('swipe',v==='swipe');
+  deckWrap.hidden=v!=='swipe';
+  if(v==='swipe'){buildDeck();}
+  else{restoreGrid();}
+  applyFilters();
+}
+function updateCount(){
+  const vis=visibleCards(), n=vis.length;
+  if(!n){deckCount.textContent='0 / 0';return;}
+  const w=deck.children[0]?deck.children[0].offsetWidth+14:1;
+  const i=Math.min(n-1,Math.max(0,Math.round(deck.scrollLeft/w)));
+  deckCount.textContent=(i+1)+' / '+n;
+}
+deck.addEventListener('scroll',updateCount,{passive:true});
+document.getElementById('prevBtn').onclick=()=>deck.scrollBy({left:-deck.clientWidth*0.85,behavior:'smooth'});
+document.getElementById('nextBtn').onclick=()=>deck.scrollBy({left:deck.clientWidth*0.85,behavior:'smooth'});
+document.getElementById('vGrid').onclick=()=>setView('grid');
+document.getElementById('vSwipe').onclick=()=>setView('swipe');
+q.addEventListener('input',applyFilters);
+// functionality chips
+const chipBox=document.getElementById('funcChips');
+(FUNCS||[]).forEach(f=>{
+  const b=document.createElement('button');
+  b.type='button'; b.className='fchip'; b.textContent=f;
+  b.onclick=()=>{selected.has(f)?selected.delete(f):selected.add(f);
+    b.classList.toggle('on',selected.has(f)); applyFilters();};
+  chipBox.appendChild(b);
 });
-// build nav
+// nav
 const nav=document.getElementById('nav');
 sections.forEach(sec=>{
   const a=document.createElement('a'); a.href='#'+sec.id; a.textContent=sec.dataset.nav;
   nav.appendChild(a);
 });
+// init view (no-op setView to sync UI)
+(function(){
+  document.getElementById('vGrid').classList.toggle('on',view==='grid');
+  document.getElementById('vSwipe').classList.toggle('on',view==='swipe');
+  document.body.classList.toggle('swipe',view==='swipe');
+  deckWrap.hidden=view!=='swipe';
+  if(view==='swipe')buildDeck();
+  applyFilters();
+})();
 </script>
 </body>
 </html>

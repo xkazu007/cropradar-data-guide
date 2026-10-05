@@ -6,11 +6,57 @@ MD = pathlib.Path.home() / "workspace/cropradar/data-source-guide-wheat-barley.m
 SITE = pathlib.Path.home() / "workspace/cropradar/data-guide-site"
 TEMPLATE = (SITE / "template.html").read_text()
 
+# entry name (substring match) -> functionality tags (what the dataset is FOR)
+FUNC = {
+    "Moroccan parcels": ["Ground truth", "Irrigation & water"],
+    "LWDCD2020": ["Disease classification"],
+    "Wheat Leaf Dataset": ["Disease classification"],
+    "nitrogen deficiency & leaf rust": ["Disease classification"],
+    "yilikal wheat leaf disease": ["Disease classification"],
+    "Wheat_Coccinellid": ["Pest modeling"],
+    "MaBaKI": ["Phenotyping"],
+    "Barley hyperspectral": ["Disease classification"],
+    "Ethiopian barley disease": ["Disease classification"],
+    "MMIDDWF": ["Weed detection"],
+    "smallSSD": ["Weed detection"],
+    "NarrabriWheat": ["Weed detection"],
+    "PMDNet": ["Weed detection"],
+    "RoboWeedMap": ["Weed detection"],
+    "BAWSeg": ["Weed detection"],
+    "Helsinki perennial weed": ["Weed detection"],
+    "SoilGrids": ["Soil properties"],
+    "FAOSTAT": ["Yield prediction"],
+    "Crop-yield prediction dataset": ["Yield prediction"],
+    "GWHD 2021": ["Yield prediction", "Phenotyping"],
+    "CropHarvest": ["Crop mapping"],
+    "Fertilizer recommendation": ["Fertilizer recommendation"],
+    "Kaggle S5E6": ["Fertilizer recommendation"],
+    "Crop water requirement": ["Irrigation & water"],
+    "NASA POWER": ["Weather data"],
+    "Open-Meteo": ["Weather data"],
+    "CHIRPS": ["Weather data"],
+    "WorldCereal": ["Crop mapping"],
+    "BreizhCrops": ["Crop mapping"],
+    "Kazakhstan UAV": ["Crop mapping", "Phenotyping"],
+    "chlorophyll-fluorescence": ["Phenotyping"],
+    "HyperLeaf": ["Phenotyping"],
+    "Wheat aphid loads": ["Pest modeling"],
+    "ICARDA RWA trials": ["Pest modeling"],
+    "PLOS ONE winter-wheat": ["Irrigation & water"],
+    "Seasonal agriculture dataset": ["Yield prediction", "Irrigation & water", "Fertilizer recommendation"],
+    "ICARDA genebank": ["Varieties & breeding"],
+    "Saïs wheat tillage": ["Yield prediction", "Fertilizer recommendation"],
+    "Al Moutmir": ["Yield prediction"],
+}
+FUNCS_ORDER = ["Ground truth", "Yield prediction", "Disease classification", "Weed detection",
+               "Soil properties", "Weather data", "Irrigation & water", "Fertilizer recommendation",
+               "Crop mapping", "Phenotyping", "Pest modeling", "Varieties & breeding"]
+
 # entry name (substring match) -> crop chips
 CROPS = {
     "Moroccan parcels": ["14 crops", "Wheat (2,854 parcels)"],
     "LWDCD2020": ["Wheat"],
-    "Wheat Leaf Dataset (Mendeley)": ["Wheat"],
+    "Wheat Leaf Dataset": ["Wheat"],
     "nitrogen deficiency & leaf rust": ["Wheat"],
     "yilikal wheat leaf disease": ["Wheat"],
     "Wheat_Coccinellid": ["Wheat"],
@@ -73,6 +119,12 @@ def crops_for(name):
             return chips
     return []
 
+def funcs_for(name):
+    for key, tags in FUNC.items():
+        if key.lower() in name.lower():
+            return tags
+    return []
+
 def esc(s):
     return html.escape(s)
 
@@ -96,15 +148,18 @@ for i in range(1, len(raw_sections), 3):
     for name, para in entries:
         name = name.strip()
         para = " ".join(para.split())
-        # strip trailing license/parked parenthetical notes already in prose — keep prose as-is
         chips = crops_for(name)
+        funcs = funcs_for(name)
         chip_html = "".join(f'<span class="chip">{esc(c)}</span>' for c in chips)
+        func_html = "".join(f'<span class="funchip">{esc(f)}</span>' for f in funcs)
         badge_html = "".join(f'<span class="badge {cls}">{esc(label)}</span>' for label, cls in badges(para))
         search = esc((name + " " + para).lower())
+        data_func = esc("|".join(funcs))
         cards.append(
-            f'<article class="card" data-search="{search}">'
+            f'<article class="card" data-search="{search}" data-func="{data_func}">'
+            f'<div class="catlabel">{esc(clean_title)}</div>'
             f"<h3>{esc(name)}</h3>"
-            f'<div class="tags">{chip_html}</div>'
+            f'<div class="tags">{chip_html}{func_html}</div>'
             f"<p>{esc(para)}</p>"
             + (f'<div class="meta">{badge_html}</div>' if badge_html else "")
             + "</article>"
@@ -122,5 +177,7 @@ for i in range(1, len(raw_sections), 3):
     )
 
 out = TEMPLATE.replace("<!--SECTIONS-->", "\n".join(sections_html))
+functs_js = "const FUNCS=" + "[" + ",".join('"' + f + '"' for f in FUNCS_ORDER) + "];"
+out = out.replace("<!--FUNCS-->", "<script>" + functs_js + "</script>")
 (SITE / "index.html").write_text(out)
 print(f"wrote index.html with {len(sections_html)} sections, {sum(s.count('class=\"card\"') for s in sections_html)} cards")
